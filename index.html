@@ -3,199 +3,152 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Poker Track PY - Cash Games</title>
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- FontAwesome -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <title>Poker Track PY - Cash & Finanzas</title>
+  
+  <link rel="icon" type="image/png" sizes="32x32" href="https://img.icons8.com/emoji/48/spades-suit.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="https://img.icons8.com/emoji/192/spades-suit.png">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="application-name" content="Poker Track">
 
-  <!-- Firebase SDKs (v9 Compat para facilidad de uso) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
   <style>
     body { background-color: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif; }
-    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: #0f172a; border-radius: 8px; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 8px; }
     .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #475569; }
   </style>
 </head>
-<body class="p-4 md:p-8 max-w-5xl mx-auto">
+<body class="p-4 md:p-8 max-w-7xl mx-auto">
 
   <!-- HEADER -->
-  <header class="flex justify-between items-center mb-8 border-b border-slate-800 pb-4">
+  <header class="flex flex-col md:flex-row justify-between items-center mb-8 border-b border-slate-800 pb-4 gap-4">
     <div>
       <h1 class="text-2xl font-bold text-emerald-400"><i class="fa-solid me-2 fa-spade"></i>Poker Tracker Py</h1>
-      <p class="text-xs text-slate-400">Control de Cash Games (Guaraníes) - Nube Activa</p>
+      <p class="text-xs text-slate-400">Control de Bankroll y Dinero Disponible (Gs.)</p>
     </div>
-    <div id="totalBankroll" class="text-right">
-      <span class="text-xs text-slate-400 block">Resultado Total</span>
-      <span id="statTotalProfit" class="text-xl font-extrabold text-slate-200">0 Gs.</span>
+    <div class="flex gap-6 text-right bg-slate-900/50 p-4 rounded-xl border border-slate-800">
+      <div>
+        <span class="text-[10px] text-slate-400 uppercase tracking-wider block">Ganancia Póker</span>
+        <span id="statTotalProfit" class="text-lg font-bold text-emerald-400">0 Gs.</span>
+      </div>
+      <div class="border-l border-slate-700 pl-6">
+        <span class="text-[10px] text-slate-400 uppercase tracking-wider block">Gastos Totales</span>
+        <span id="statTotalExpenses" class="text-lg font-bold text-rose-400">0 Gs.</span>
+      </div>
+      <div class="border-l border-slate-700 pl-6">
+        <span class="text-[10px] text-slate-400 uppercase tracking-wider block">Dinero Disponible</span>
+        <span id="statAvailable" class="text-xl font-black text-sky-400">0 Gs.</span>
+      </div>
     </div>
   </header>
 
-  <!-- TARJETAS DE RESUMEN GLOBAL -->
-  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-    <div class="bg-slate-800/60 border border-slate-700/50 p-4 rounded-xl">
-      <span class="text-xs text-slate-400 font-medium">Winrate Global</span>
-      <div id="statWinrate" class="text-2xl font-black mt-1 text-emerald-400">0.0 <span class="text-xs font-normal">bb/100</span></div>
+  <!-- GRÁFICOS -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <div class="bg-slate-800 border border-slate-700 p-4 rounded-2xl shadow-xl">
+      <h2 class="text-sm font-semibold mb-2 text-slate-200"><i class="fa-solid fa-chart-line text-emerald-400"></i> Evolución de Ganancias Póker</h2>
+      <div class="relative w-full h-56"><canvas id="profitChart"></canvas></div>
     </div>
-    <div class="bg-slate-800/60 border border-slate-700/50 p-4 rounded-xl">
-      <span class="text-xs text-slate-400 font-medium">Ganancia / Hora</span>
-      <div id="statHourly" class="text-xl font-bold mt-1 text-slate-200">0 Gs./h</div>
-    </div>
-    <div class="bg-slate-800/60 border border-slate-700/50 p-4 rounded-xl">
-      <span class="text-xs text-slate-400 font-medium">Manos Totales</span>
-      <div id="statTotalHands" class="text-xl font-bold mt-1 text-slate-200">0</div>
-    </div>
-    <div class="bg-slate-800/60 border border-slate-700/50 p-4 rounded-xl">
-      <span class="text-xs text-slate-400 font-medium">Horas Jugadas</span>
-      <div id="statTotalHours" class="text-xl font-bold mt-1 text-slate-200">0.0 h</div>
+    <div class="bg-slate-800 border border-slate-700 p-4 rounded-2xl shadow-xl">
+      <h2 class="text-sm font-semibold mb-2 text-slate-200"><i class="fa-solid fa-chart-area text-sky-400"></i> Evolución de Dinero Disponible</h2>
+      <div class="relative w-full h-56"><canvas id="availableChart"></canvas></div>
     </div>
   </div>
 
-  <!-- SECCIÓN DEL GRÁFICO ACUMULADO -->
-  <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl shadow-xl mb-8">
-    <h2 class="text-lg font-semibold mb-4 text-slate-200 flex items-center gap-2">
-      <i class="fa-solid fa-chart-line text-emerald-400"></i> Evolución de Ganancias Diarias (Gs.)
-    </h2>
-    <div class="relative w-full h-72">
-      <canvas id="profitChart"></canvas>
+  <!-- FILTROS GLOBALES -->
+  <div class="bg-slate-800 border border-slate-700 p-4 rounded-2xl shadow-xl mb-6 flex flex-col sm:flex-row items-center gap-4 justify-between">
+    <div class="text-sm font-semibold text-slate-300"><i class="fa-solid fa-filter text-sky-400"></i> Rango de Fechas:</div>
+    <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2">
+        <span class="text-xs text-slate-400">Desde:</span>
+        <input type="date" id="startDate" onchange="renderAll()" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs text-slate-200 focus:border-sky-500">
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="text-xs text-slate-400">Hasta:</span>
+        <input type="date" id="endDate" onchange="renderAll()" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs text-slate-200 focus:border-sky-500">
+      </div>
+      <button onclick="clearFilters()" class="text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 px-3 py-1.5 rounded-lg transition-colors"><i class="fa-solid fa-xmark"></i> Limpiar</button>
     </div>
   </div>
 
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
     
-    <!-- FORMULARIO DE REGISTRO DE SESIÓN -->
-    <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl shadow-xl h-fit">
-      <h2 id="formTitle" class="text-lg font-semibold mb-4 text-emerald-400 flex items-center gap-2">
-        <i class="fa-solid fa-circle-plus"></i> Cargar Sesión
-      </h2>
-      
-      <form id="sessionForm" class="space-y-4">
-        <input type="hidden" id="editSessionId" value="">
-
-        <div>
-          <label class="block text-xs text-slate-400 mb-1">Fecha</label>
-          <input type="date" id="date" required class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-200 focus:outline-none focus:border-emerald-500">
-        </div>
-
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs text-slate-400 mb-1">Nivel / Stake</label>
-            <select id="stake" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-200 focus:outline-none focus:border-emerald-500">
-              <option value="NL8">NL8 (250/500)</option>
-              <option value="NL10">NL10 (300/600)</option>
-              <option value="NL10-272">NL10 (272/544)</option>
-            </select>
+    <!-- MÓDULO PÓKER -->
+    <div class="space-y-6">
+      <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl shadow-xl">
+        <h2 class="text-lg font-semibold mb-4 text-emerald-400 flex items-center gap-2"><i class="fa-solid fa-cards"></i> Cargar Sesión Póker</h2>
+        <form id="sessionForm" class="space-y-4">
+          <input type="hidden" id="editSessionId" value="">
+          <div class="grid grid-cols-2 gap-3">
+            <div><label class="block text-xs text-slate-400 mb-1">Fecha</label><input type="date" id="date" required class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-200"></div>
+            <div><label class="block text-xs text-slate-400 mb-1">Resultado (Gs.)</label><input type="number" id="profit" step="1" required class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-200"></div>
+            <div>
+              <label class="block text-xs text-slate-400 mb-1">Nivel</label>
+              <select id="stake" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-200">
+                <option value="NL8">NL8</option>
+                <option value="NL10">NL10</option>
+                <option value="NL10-272">NL10 (272/544)</option>
+                <option value="Presencial">Presencial</option>
+              </select>
+            </div>
+            <div><label class="block text-xs text-slate-400 mb-1">Manos</label><input type="number" id="hands" min="1" required class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-200"></div>
+            <div class="col-span-2"><label class="block text-xs text-slate-400 mb-1">Minutos Jugados</label><input type="number" id="minutes" min="1" required class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-200"></div>
           </div>
-          <div>
-            <label class="block text-xs text-slate-400 mb-1">Formato</label>
-            <select id="format" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-200 focus:outline-none focus:border-emerald-500">
-              <option value="8-max">8-max</option>
-              <option value="9-max">9-max</option>
-            </select>
-          </div>
-        </div>
-
-        <div>
-          <label class="block text-xs text-slate-400 mb-1">Resultado Neto (Gs.) <span class="text-slate-500">(usar - si fue pérdida)</span></label>
-          <input type="number" id="profit" placeholder="Ej: 150000 o -50000" step="1" required class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-200 focus:outline-none focus:border-emerald-500">
-        </div>
-
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs text-slate-400 mb-1">Manos Jugadas</label>
-            <input type="number" id="hands" placeholder="Ej: 1200" min="1" required class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-200 focus:outline-none focus:border-emerald-500">
-          </div>
-          <div>
-            <label class="block text-xs text-slate-400 mb-1">Duración (Minutos)</label>
-            <input type="number" id="minutes" placeholder="Ej: 90" min="1" required class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-200 focus:outline-none focus:border-emerald-500">
-          </div>
-        </div>
-
-        <div>
-          <label class="block text-xs text-slate-400 mb-1">Notas Rápidas (Opcional)</label>
-          <input type="text" id="notes" placeholder="Ej: Mucho tilt al final / Mesa muy blanda" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-200 focus:outline-none focus:border-emerald-500">
-        </div>
-
-        <button type="submit" id="submitBtn" class="w-full bg-emerald-600 hover:bg-emerald-500 font-semibold text-white py-3 rounded-lg transition-colors shadow-lg shadow-emerald-900/30">
-          Guardar Sesión
-        </button>
-        <button type="button" id="cancelEditBtn" onclick="resetForm()" class="hidden w-full bg-slate-700 hover:bg-slate-600 font-semibold text-slate-300 py-2 rounded-lg transition-colors text-xs">
-          Cancelar Edición
-        </button>
-      </form>
-    </div>
-
-    <!-- HISTORIAL DE SESIONES -->
-    <div class="lg:col-span-2 bg-slate-800 border border-slate-700 p-6 rounded-2xl shadow-xl flex flex-col justify-between">
-      <div>
-        <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3 mb-4">
-          <h2 class="text-lg font-semibold text-slate-200 flex items-center gap-2">
-            <i class="fa-solid fa-list"></i> Historial
-          </h2>
-          
-          <div class="flex items-center gap-2">
-            <span class="text-xs text-slate-400"><i class="fa-solid fa-filter"></i> Filtrar:</span>
-            <input type="date" id="filterDate" onchange="renderList()" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-emerald-500">
-            <button onclick="clearFilter()" title="Limpiar filtro" class="text-xs text-slate-400 hover:text-slate-200 bg-slate-700 px-2 py-1 rounded">
-              <i class="fa-solid fa-xmark"></i>
-            </button>
-          </div>
-        </div>
-
-        <div class="max-h-[380px] overflow-y-auto overflow-x-auto custom-scrollbar border border-slate-700/60 rounded-xl bg-slate-900/40">
-          <table class="w-full text-left border-collapse">
-            <thead class="sticky top-0 bg-slate-900 z-10 shadow-md">
-              <tr class="border-b border-slate-700 text-xs text-slate-400 uppercase">
-                <th class="py-3 px-3">Fecha</th>
-                <th class="py-3 px-3">Stake</th>
-                <th class="py-3 px-3">Resultado</th>
-                <th class="py-3 px-3">Manos</th>
-                <th class="py-3 px-3">Winrate</th>
-                <th class="py-3 px-3 text-right">Acciones</th>
-              </tr>
-            </thead>
-            <tbody id="sessionList" class="divide-y divide-slate-700/50 text-sm">
-              <tr><td colspan="6" class="text-center py-6 text-slate-500">Conectando a la nube...</td></tr>
-            </tbody>
-          </table>
-        </div>
+          <button type="submit" id="submitSessionBtn" class="w-full bg-emerald-600 hover:bg-emerald-500 font-semibold text-white py-2.5 rounded-lg">Guardar Sesión</button>
+        </form>
       </div>
 
-      <div id="daySummary" class="hidden mt-4 p-4 bg-slate-900/80 border border-slate-700/80 rounded-xl">
-        <div class="text-xs font-semibold text-emerald-400 mb-2 uppercase tracking-wider flex items-center gap-2">
-          <i class="fa-solid fa-calendar-day"></i> Resumen del Día (<span id="summaryDateText"></span>)
-        </div>
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
-          <div class="bg-slate-800 p-2 rounded-lg">
-            <span class="text-[10px] text-slate-400 block">Resultado</span>
-            <span id="dayProfit" class="font-bold text-sm">0 Gs.</span>
+      <div class="bg-slate-800 border border-slate-700 p-4 rounded-2xl shadow-xl h-80 overflow-y-auto custom-scrollbar">
+        <h3 class="text-sm font-semibold mb-3 text-slate-300">Historial de Sesiones</h3>
+        <table class="w-full text-left text-xs">
+          <thead class="sticky top-0 bg-slate-900 shadow"><tr class="text-slate-400 uppercase"><th class="py-2 px-2">Fecha</th><th class="py-2 px-2">Gs.</th><th class="py-2 px-2">bb/100</th><th class="py-2 px-2 text-right">Acción</th></tr></thead>
+          <tbody id="sessionList" class="divide-y divide-slate-700/50 text-slate-300"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- MÓDULO GASTOS -->
+    <div class="space-y-6">
+      <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl shadow-xl">
+        <h2 class="text-lg font-semibold mb-4 text-rose-400 flex items-center gap-2"><i class="fa-solid fa-wallet"></i> Registrar Gasto</h2>
+        <form id="expenseForm" class="space-y-4">
+          <input type="hidden" id="editExpenseId" value="">
+          <div class="grid grid-cols-2 gap-3">
+            <div><label class="block text-xs text-slate-400 mb-1">Fecha</label><input type="date" id="expDate" required class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-200"></div>
+            <div><label class="block text-xs text-slate-400 mb-1">Monto (Gs.)</label><input type="number" id="expAmount" min="1" step="1" required class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-200"></div>
+            <div class="col-span-2">
+              <label class="block text-xs text-slate-400 mb-1">Categoría</label>
+              <select id="expCategory" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-200">
+                <option value="necesarias">Compras Necesarias</option>
+                <option value="ocio">Ocio / Caprichos</option>
+                <option value="viajes">Viajes</option>
+                <option value="deudas">Pago de Deudas</option>
+                <option value="otros">Otros</option>
+              </select>
+            </div>
+            <div class="col-span-2"><label class="block text-xs text-slate-400 mb-1">Detalle</label><input type="text" id="expNotes" placeholder="Ej: Pasaje, cuota, cena, etc." required class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-200"></div>
           </div>
-          <div class="bg-slate-800 p-2 rounded-lg">
-            <span class="text-[10px] text-slate-400 block">Manos</span>
-            <span id="dayHands" class="font-bold text-sm text-slate-200">0</span>
-          </div>
-          <div class="bg-slate-800 p-2 rounded-lg">
-            <span class="text-[10px] text-slate-400 block">Winrate Día</span>
-            <span id="dayWinrate" class="font-bold text-sm">0 bb/100</span>
-          </div>
-          <div class="bg-slate-800 p-2 rounded-lg">
-            <span class="text-[10px] text-slate-400 block">Tiempo</span>
-            <span id="dayTime" class="font-bold text-sm text-slate-200">0m</span>
-          </div>
-        </div>
+          <button type="submit" id="submitExpenseBtn" class="w-full bg-rose-600 hover:bg-rose-500 font-semibold text-white py-2.5 rounded-lg">Guardar Gasto</button>
+        </form>
       </div>
 
+      <div class="bg-slate-800 border border-slate-700 p-4 rounded-2xl shadow-xl h-80 overflow-y-auto custom-scrollbar">
+        <h3 class="text-sm font-semibold mb-3 text-slate-300">Historial de Gastos</h3>
+        <table class="w-full text-left text-xs">
+          <thead class="sticky top-0 bg-slate-900 shadow"><tr class="text-slate-400 uppercase"><th class="py-2 px-2">Fecha</th><th class="py-2 px-2">Categoría</th><th class="py-2 px-2">Monto</th><th class="py-2 px-2 text-right">Acción</th></tr></thead>
+          <tbody id="expenseList" class="divide-y divide-slate-700/50 text-slate-300"></tbody>
+        </table>
+      </div>
     </div>
+
   </div>
 
   <script>
-    // Configuración de tu proyecto "pokerdate-46282"
     const firebaseConfig = {
       apiKey: "AIzaSyDvQwZ9u8IgPKS3NDg7q93cfInADBgOfE8",
       authDomain: "pokerdate-46282.firebaseapp.com",
@@ -206,288 +159,212 @@
       appId: "1:61554305157:web:9554c4b2c81db2734661ec"
     };
 
-    // Inicializar Firebase
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const sessionsRef = db.ref('poker_sessions');
+    const expensesRef = db.ref('poker_expenses');
 
-    const STAKES_BB = { 'NL8': 500, 'NL10': 600, 'NL10-272': 544 };
+    const STAKES_BB = { 'NL8': 500, 'NL10': 600, 'NL10-272': 544, 'Presencial': 1000 };
+    
     let sessions = [];
-    let profitChartInstance = null;
+    let expenses = [];
+    let profitChart = null;
+    let availableChart = null;
 
     document.getElementById('date').valueAsDate = new Date();
+    document.getElementById('expDate').valueAsDate = new Date();
 
-    // Migración automática del LocalStorage a Firebase si es la primera vez que entras
-    const localData = localStorage.getItem('poker_sessions');
-    if (localData) {
-      const parsedLocal = JSON.parse(localData);
-      if (parsedLocal.length > 0) {
-        parsedLocal.forEach(s => sessionsRef.child(s.id).set(s));
-        localStorage.removeItem('poker_sessions'); // Limpiar almacenamiento local tras migrar
-      }
-    }
-
-    // Escuchar la base de datos en tiempo real
+    // Listeners
     sessionsRef.on('value', (snapshot) => {
-      const data = snapshot.val();
       sessions = [];
-      if (data) {
-        Object.keys(data).forEach(key => {
-          sessions.push(data[key]);
-        });
-        sessions.sort((a, b) => new Date(b.date) - new Date(a.date));
-      }
-      renderList();
-      renderStats();
-      renderChart();
+      snapshot.forEach(child => { sessions.push(child.val()); });
+      sessions.sort((a, b) => new Date(b.date) - new Date(a.date));
+      renderAll();
     });
 
-    const form = document.getElementById('sessionForm');
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const editId = document.getElementById('editSessionId').value;
+    expensesRef.on('value', (snapshot) => {
+      expenses = [];
+      snapshot.forEach(child => { expenses.push(child.val()); });
+      expenses.sort((a, b) => new Date(b.date) - new Date(a.date));
+      renderAll();
+    });
 
-      const sessionData = {
+    // Guardar Sesión
+    document.getElementById('sessionForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const id = document.getElementById('editSessionId').value || Date.now().toString();
+      sessionsRef.child(id).set({
+        id,
         date: document.getElementById('date').value,
         stake: document.getElementById('stake').value,
-        format: document.getElementById('format').value,
         profit: parseFloat(document.getElementById('profit').value),
         hands: parseInt(document.getElementById('hands').value),
-        minutes: parseInt(document.getElementById('minutes').value),
-        notes: document.getElementById('notes').value
-      };
-
-      if (editId) {
-        sessionsRef.child(editId).update(sessionData);
-      } else {
-        const id = Date.now().toString();
-        sessionsRef.child(id).set({ id, ...sessionData });
-      }
-
-      resetForm();
-    });
-
-    function editSession(id) {
-      const session = sessions.find(s => s.id == id);
-      if (!session) return;
-
-      document.getElementById('editSessionId').value = session.id;
-      document.getElementById('date').value = session.date;
-      document.getElementById('stake').value = session.stake;
-      document.getElementById('format').value = session.format;
-      document.getElementById('profit').value = session.profit;
-      document.getElementById('hands').value = session.hands;
-      document.getElementById('minutes').value = session.minutes;
-      document.getElementById('notes').value = session.notes || '';
-
-      document.getElementById('formTitle').innerHTML = `<i class="fa-solid fa-pen-to-square text-sky-400"></i> Editar Sesión`;
-      const submitBtn = document.getElementById('submitBtn');
-      submitBtn.innerText = 'Actualizar Sesión';
-      submitBtn.className = "w-full bg-sky-600 hover:bg-sky-500 font-semibold text-white py-3 rounded-lg transition-colors shadow-lg shadow-sky-900/30";
-      document.getElementById('cancelEditBtn').classList.remove('hidden');
-
-      form.scrollIntoView({ behavior: 'smooth' });
-    }
-
-    function resetForm() {
-      form.reset();
+        minutes: parseInt(document.getElementById('minutes').value)
+      });
+      document.getElementById('sessionForm').reset();
       document.getElementById('editSessionId').value = '';
       document.getElementById('date').valueAsDate = new Date();
-      document.getElementById('formTitle').innerHTML = `<i class="fa-solid fa-circle-plus"></i> Cargar Sesión`;
-      const submitBtn = document.getElementById('submitBtn');
-      submitBtn.innerText = 'Guardar Sesión';
-      submitBtn.className = "w-full bg-emerald-600 hover:bg-emerald-500 font-semibold text-white py-3 rounded-lg transition-colors shadow-lg shadow-emerald-900/30";
-      document.getElementById('cancelEditBtn').classList.add('hidden');
-    }
+    });
 
-    function deleteSession(id) {
-      if(confirm('¿Seguro que deseas eliminar esta sesión de la nube?')) {
-        sessionsRef.child(id).remove();
-        if (document.getElementById('editSessionId').value == id) {
-          resetForm();
-        }
+    // Guardar Gasto
+    document.getElementById('expenseForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const id = document.getElementById('editExpenseId').value || Date.now().toString();
+      expensesRef.child(id).set({
+        id,
+        date: document.getElementById('expDate').value,
+        amount: parseFloat(document.getElementById('expAmount').value),
+        category: document.getElementById('expCategory').value,
+        notes: document.getElementById('expNotes').value
+      });
+      document.getElementById('expenseForm').reset();
+      document.getElementById('editExpenseId').value = '';
+      document.getElementById('expDate').valueAsDate = new Date();
+    });
+
+    function deleteItem(refName, id) {
+      if(confirm('¿Seguro que deseas eliminar este registro?')) {
+        db.ref(refName).child(id).remove();
       }
     }
 
-    function clearFilter() {
-      document.getElementById('filterDate').value = '';
-      renderList();
+    function clearFilters() {
+      document.getElementById('startDate').value = '';
+      document.getElementById('endDate').value = '';
+      renderAll();
     }
 
-    function renderList() {
+    function renderAll() {
+      const sDate = document.getElementById('startDate').value;
+      const eDate = document.getElementById('endDate').value;
+
+      const fSessions = sessions.filter(s => (!sDate || s.date >= sDate) && (!eDate || s.date <= eDate));
+      const fExpenses = expenses.filter(e => (!sDate || e.date >= sDate) && (!eDate || e.date <= eDate));
+
+      renderSessions(fSessions);
+      renderExpenses(fExpenses);
+
+      let totalP = 0; fSessions.forEach(s => totalP += s.profit);
+      let totalE = 0; fExpenses.forEach(e => totalE += e.amount);
+      const available = totalP - totalE;
+
+      document.getElementById('statTotalProfit').innerText = `${totalP.toLocaleString('es-PY')} Gs.`;
+      document.getElementById('statTotalExpenses').innerText = `${totalE.toLocaleString('es-PY')} Gs.`;
+      document.getElementById('statAvailable').innerText = `${available.toLocaleString('es-PY')} Gs.`;
+      document.getElementById('statAvailable').className = `text-xl font-black ${available >= 0 ? 'text-sky-400' : 'text-rose-500'}`;
+
+      drawProfitChart(fSessions);
+      drawAvailableChart(fSessions, fExpenses);
+    }
+
+    function renderSessions(data) {
       const list = document.getElementById('sessionList');
-      const filterDate = document.getElementById('filterDate').value;
-      const daySummaryBox = document.getElementById('daySummary');
       list.innerHTML = '';
-
-      const filteredSessions = filterDate 
-        ? sessions.filter(s => s.date === filterDate)
-        : sessions;
-
-      if (filteredSessions.length === 0) {
-        list.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-500">No hay sesiones para mostrar.</td></tr>`;
-        daySummaryBox.classList.add('hidden');
-        return;
-      }
-
-      filteredSessions.forEach(s => {
-        const bigBlind = STAKES_BB[s.stake] || 500;
-        const bbWon = s.profit / bigBlind;
-        const bb100 = ((bbWon / s.hands) * 100).toFixed(2);
-        const isProfit = s.profit >= 0;
-        const stakeDisplay = s.stake === 'NL10-272' ? 'NL10 (272/544)' : s.stake;
-
-        const row = document.createElement('tr');
-        row.className = "hover:bg-slate-700/30 transition-colors";
-        row.innerHTML = `
-          <td class="py-3 px-3 text-slate-300 whitespace-nowrap">${s.date}</td>
-          <td class="py-3 px-3 whitespace-nowrap"><span class="text-xs bg-slate-700 px-2 py-0.5 rounded font-mono">${stakeDisplay}</span> <span class="text-xs text-slate-500">${s.format}</span></td>
-          <td class="py-3 px-3 font-semibold whitespace-nowrap ${isProfit ? 'text-emerald-400' : 'text-rose-400'}">
-            ${isProfit ? '+' : ''}${s.profit.toLocaleString('es-PY')} Gs.
-          </td>
-          <td class="py-3 px-3 text-slate-300 whitespace-nowrap">${s.hands.toLocaleString()}</td>
-          <td class="py-3 px-3 font-bold whitespace-nowrap ${bb100 >= 0 ? 'text-emerald-400' : 'text-rose-400'}">
-            ${bb100} <span class="text-[10px] font-normal text-slate-400">bb/100</span>
-          </td>
-          <td class="py-3 px-3 text-right space-x-2 whitespace-nowrap">
-            <button onclick="editSession('${s.id}')" title="Editar" class="text-slate-400 hover:text-sky-400 transition-colors">
-              <i class="fa-solid fa-pen"></i>
-            </button>
-            <button onclick="deleteSession('${s.id}')" title="Eliminar" class="text-slate-500 hover:text-rose-400 transition-colors">
-              <i class="fa-solid fa-trash"></i>
-            </button>
-          </td>
-        `;
-        list.appendChild(row);
-      });
-
-      if (filterDate) {
-        let dProfit = 0, dHands = 0, dMin = 0, dBBWon = 0;
-        filteredSessions.forEach(s => {
-          dProfit += s.profit;
-          dHands += s.hands;
-          dMin += s.minutes;
-          dBBWon += (s.profit / (STAKES_BB[s.stake] || 500));
-        });
-
-        const dWinrate = dHands > 0 ? ((dBBWon / dHands) * 100).toFixed(2) : 0;
-        document.getElementById('summaryDateText').innerText = filterDate;
-        const elProfit = document.getElementById('dayProfit');
-        elProfit.innerText = `${dProfit >= 0 ? '+' : ''}${dProfit.toLocaleString('es-PY')} Gs.`;
-        elProfit.className = `font-bold text-sm ${dProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
-        document.getElementById('dayHands').innerText = dHands.toLocaleString();
-        
-        const elWinrate = document.getElementById('dayWinrate');
-        elWinrate.innerText = `${dWinrate} bb/100`;
-        elWinrate.className = `font-bold text-sm ${dWinrate >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
-
-        const hours = Math.floor(dMin / 60);
-        const mins = dMin % 60;
-        document.getElementById('dayTime').innerText = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
-        daySummaryBox.classList.remove('hidden');
-      } else {
-        daySummaryBox.classList.add('hidden');
-      }
-    }
-
-    function renderStats() {
-      if (sessions.length === 0) {
-        document.getElementById('statTotalProfit').innerText = '0 Gs.';
-        document.getElementById('statWinrate').innerText = '0.0 bb/100';
-        document.getElementById('statHourly').innerText = '0 Gs./h';
-        document.getElementById('statTotalHands').innerText = '0';
-        document.getElementById('statTotalHours').innerText = '0.0 h';
-        return;
-      }
-
-      let totalProfit = 0, totalHands = 0, totalMinutes = 0, totalBBWon = 0;
-
-      sessions.forEach(s => {
-        totalProfit += s.profit;
-        totalHands += s.hands;
-        totalMinutes += s.minutes;
+      data.forEach(s => {
         const bb = STAKES_BB[s.stake] || 500;
-        totalBBWon += (s.profit / bb);
+        const bb100 = (((s.profit / bb) / s.hands) * 100).toFixed(2);
+        const color = s.profit >= 0 ? 'text-emerald-400' : 'text-rose-400';
+        list.innerHTML += `
+          <tr class="hover:bg-slate-700/30">
+            <td class="py-2 px-2">${s.date}</td>
+            <td class="py-2 px-2 font-bold ${color}">${s.profit.toLocaleString()}</td>
+            <td class="py-2 px-2 ${color}">${s.stake === 'Presencial' ? '-' : bb100}</td>
+            <td class="py-2 px-2 text-right">
+              <button onclick="deleteItem('poker_sessions', '${s.id}')" class="text-slate-500 hover:text-rose-400"><i class="fa-solid fa-trash"></i></button>
+            </td>
+          </tr>`;
       });
-
-      const totalHours = totalMinutes / 60;
-      const globalBB100 = totalHands > 0 ? ((totalBBWon / totalHands) * 100).toFixed(2) : 0;
-      const hourlyRate = totalHours > 0 ? Math.round(totalProfit / totalHours) : 0;
-
-      document.getElementById('statTotalProfit').innerText = `${totalProfit >= 0 ? '+' : ''}${totalProfit.toLocaleString('es-PY')} Gs.`;
-      document.getElementById('statTotalProfit').className = `text-xl font-extrabold ${totalProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
-      document.getElementById('statWinrate').innerHTML = `${globalBB100} <span class="text-xs font-normal">bb/100</span>`;
-      document.getElementById('statWinrate').className = `text-2xl font-black mt-1 ${globalBB100 >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
-      document.getElementById('statHourly').innerText = `${hourlyRate.toLocaleString('es-PY')} Gs./h`;
-      document.getElementById('statTotalHands').innerText = totalHands.toLocaleString();
-      document.getElementById('statTotalHours').innerText = `${totalHours.toFixed(1)} h`;
     }
 
-    function renderChart() {
+    function renderExpenses(data) {
+      const list = document.getElementById('expenseList');
+      const catLabels = { 'necesarias': 'Necesaria', 'ocio': 'Ocio', 'viajes': 'Viaje', 'deudas': 'Deuda', 'otros': 'Otro' };
+      list.innerHTML = '';
+      data.forEach(e => {
+        list.innerHTML += `
+          <tr class="hover:bg-slate-700/30">
+            <td class="py-2 px-2">${e.date}</td>
+            <td class="py-2 px-2"><span class="text-[10px] bg-slate-700 px-1.5 py-0.5 rounded">${catLabels[e.category] || 'Gasto'}</span><br><span class="text-[10px] text-slate-500">${e.notes}</span></td>
+            <td class="py-2 px-2 font-bold text-rose-400">${e.amount.toLocaleString()}</td>
+            <td class="py-2 px-2 text-right">
+              <button onclick="deleteItem('poker_expenses', '${e.id}')" class="text-slate-500 hover:text-rose-400"><i class="fa-solid fa-trash"></i></button>
+            </td>
+          </tr>`;
+      });
+    }
+
+    // Gráfico de Ganancias con Línea Dinámica (Verde/Rojo)
+    function drawProfitChart(fSessions) {
       const ctx = document.getElementById('profitChart').getContext('2d');
+      if (profitChart) profitChart.destroy();
 
-      if (sessions.length === 0) {
-        if (profitChartInstance) { profitChartInstance.destroy(); profitChartInstance = null; }
-        return;
-      }
+      const daily = {};
+      fSessions.forEach(s => { daily[s.date] = (daily[s.date] || 0) + s.profit; });
 
-      const dailyMap = {};
-      sessions.forEach(s => {
-        dailyMap[s.date] = (dailyMap[s.date] || 0) + s.profit;
-      });
+      const dates = Object.keys(daily).sort((a, b) => new Date(a) - new Date(b));
+      let cum = 0; const labels = ['Inicio']; const vals = [0];
 
-      const sortedDates = Object.keys(dailyMap).sort((a, b) => new Date(a) - new Date(b));
+      dates.forEach(d => { cum += daily[d]; labels.push(d); vals.push(cum); });
 
-      let cumulative = 0;
-      const labels = ['Inicio'];
-      const data = [0];
-
-      sortedDates.forEach(date => {
-        cumulative += dailyMap[date];
-        labels.push(date);
-        data.push(cumulative);
-      });
-
-      if (profitChartInstance) { profitChartInstance.destroy(); }
-
-      profitChartInstance = new Chart(ctx, {
+      profitChart = new Chart(ctx, {
         type: 'line',
         data: {
-          labels: labels,
+          labels,
           datasets: [{
-            label: 'Ganancia Acumulada (Gs.)',
-            data: data,
-            fill: false,
+            data: vals,
+            fill: true,
             tension: 0.1,
-            pointRadius: 5,
-            pointHoverRadius: 7,
-            pointBackgroundColor: ctx => {
-              const idx = ctx.dataIndex;
-              if (idx === 0) return '#10b981';
-              return ctx.dataset.data[idx] >= ctx.dataset.data[idx - 1] ? '#10b981' : '#f43f5e';
-            },
+            pointRadius: 2,
             segment: {
-              borderColor: ctx => ctx.p0.parsed.y <= ctx.p1.parsed.y ? '#10b981' : '#f43f5e'
+              borderColor: ctx => ctx.p0.parsed.y > ctx.p1.parsed.y ? '#f43f5e' : '#10b981',
+              backgroundColor: ctx => ctx.p0.parsed.y > ctx.p1.parsed.y ? 'rgba(244, 63, 94, 0.1)' : 'rgba(16, 185, 129, 0.1)'
             }
           }]
         },
         options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false },
-            tooltip: {
-              callbacks: {
-                label: function(context) {
-                  const val = context.raw;
-                  return `Balance Acumulado: ${val >= 0 ? '+' : ''}${val.toLocaleString('es-PY')} Gs.`;
-                }
-              }
-            }
-          },
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
           scales: {
-            x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8', font: { size: 11 } } },
-            y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8', callback: v => v.toLocaleString('es-PY') + ' Gs.' } }
+            x: { ticks: { color: '#64748b', font: {size: 9} }, grid: { color: '#334155' } },
+            y: { ticks: { color: '#64748b', font: {size: 9} }, grid: { color: '#334155' } }
+          }
+        }
+      });
+    }
+
+    // Gráfico de Dinero Disponible (Ganancias - Gastos acumulados por fecha)
+    function drawAvailableChart(fSessions, fExpenses) {
+      const ctx = document.getElementById('availableChart').getContext('2d');
+      if (availableChart) availableChart.destroy();
+
+      const dailyMap = {};
+      fSessions.forEach(s => { dailyMap[s.date] = (dailyMap[s.date] || 0) + s.profit; });
+      fExpenses.forEach(e => { dailyMap[e.date] = (dailyMap[e.date] || 0) - e.amount; });
+
+      const dates = Object.keys(dailyMap).sort((a, b) => new Date(a) - new Date(b));
+      let cum = 0; const labels = ['Inicio']; const vals = [0];
+
+      dates.forEach(d => { cum += dailyMap[d]; labels.push(d); vals.push(cum); });
+
+      availableChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            data: vals,
+            borderColor: '#38bdf8',
+            backgroundColor: 'rgba(56, 189, 248, 0.15)',
+            fill: true,
+            tension: 0.1,
+            pointRadius: 2
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { ticks: { color: '#64748b', font: {size: 9} }, grid: { color: '#334155' } },
+            y: { ticks: { color: '#64748b', font: {size: 9} }, grid: { color: '#334155' } }
           }
         }
       });
