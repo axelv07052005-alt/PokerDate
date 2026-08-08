@@ -44,7 +44,7 @@
       </div>
     </div>
 
-    <!-- TARJETAS DE MÉTRICAS (MÉTRICAS PÓKER + FINANZAS) -->
+    <!-- TARJETAS DE MÉTRICAS -->
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
       
       <!-- Ganancia Póker -->
@@ -124,8 +124,11 @@
     
     <!-- MÓDULO PÓKER -->
     <div class="space-y-6">
-      <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl shadow-xl">
-        <h2 class="text-lg font-semibold mb-4 text-emerald-400 flex items-center gap-2"><i class="fa-solid fa-cards"></i> Cargar Sesión Póker</h2>
+      <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl shadow-xl" id="pokerFormCard">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-lg font-semibold text-emerald-400 flex items-center gap-2"><i class="fa-solid fa-cards"></i> <span id="pokerFormTitle">Cargar Sesión Póker</span></h2>
+          <button id="cancelPokerEditBtn" onclick="resetPokerForm()" class="hidden text-xs text-rose-400 hover:underline"><i class="fa-solid fa-xmark"></i> Cancelar edición</button>
+        </div>
         <form id="sessionForm" class="space-y-4">
           <input type="hidden" id="editSessionId" value="">
           <div class="grid grid-cols-2 gap-3">
@@ -143,7 +146,7 @@
             <div><label class="block text-xs text-slate-400 mb-1">Manos</label><input type="number" id="hands" min="1" required class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-200"></div>
             <div class="col-span-2"><label class="block text-xs text-slate-400 mb-1">Minutos Jugados</label><input type="number" id="minutes" min="1" required class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-200"></div>
           </div>
-          <button type="submit" id="submitSessionBtn" class="w-full bg-emerald-600 hover:bg-emerald-500 font-semibold text-white py-2.5 rounded-lg">Guardar Sesión</button>
+          <button type="submit" id="submitSessionBtn" class="w-full bg-emerald-600 hover:bg-emerald-500 font-semibold text-white py-2.5 rounded-lg transition-colors">Guardar Sesión</button>
         </form>
       </div>
 
@@ -158,8 +161,11 @@
 
     <!-- MÓDULO GASTOS Y MOVIMIENTOS -->
     <div class="space-y-6">
-      <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl shadow-xl">
-        <h2 class="text-lg font-semibold mb-4 text-rose-400 flex items-center gap-2"><i class="fa-solid fa-wallet"></i> Registrar Gasto / Ingreso</h2>
+      <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl shadow-xl" id="expenseFormCard">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-lg font-semibold text-rose-400 flex items-center gap-2"><i class="fa-solid fa-wallet"></i> <span id="expenseFormTitle">Registrar Gasto / Ingreso</span></h2>
+          <button id="cancelExpenseEditBtn" onclick="resetExpenseForm()" class="hidden text-xs text-rose-400 hover:underline"><i class="fa-solid fa-xmark"></i> Cancelar edición</button>
+        </div>
         <form id="expenseForm" class="space-y-4">
           <input type="hidden" id="editExpenseId" value="">
           <div class="grid grid-cols-2 gap-3">
@@ -178,7 +184,7 @@
             </div>
             <div class="col-span-2"><label class="block text-xs text-slate-400 mb-1">Detalle</label><input type="text" id="expNotes" placeholder="Ej: Trabajo extra, pasaje, cena, etc." required class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-200"></div>
           </div>
-          <button type="submit" id="submitExpenseBtn" class="w-full bg-rose-600 hover:bg-rose-500 font-semibold text-white py-2.5 rounded-lg">Guardar Registro</button>
+          <button type="submit" id="submitExpenseBtn" class="w-full bg-rose-600 hover:bg-rose-500 font-semibold text-white py-2.5 rounded-lg transition-colors">Guardar Registro</button>
         </form>
       </div>
 
@@ -248,7 +254,7 @@
       renderAll();
     });
 
-    // Guardar Sesión
+    // Guardar / Actualizar Sesión
     document.getElementById('sessionForm').addEventListener('submit', (e) => {
       e.preventDefault();
       const id = document.getElementById('editSessionId').value || Date.now().toString();
@@ -260,12 +266,40 @@
         hands: parseInt(document.getElementById('hands').value),
         minutes: parseInt(document.getElementById('minutes').value)
       });
+      resetPokerForm();
+    });
+
+    // Editar Sesión
+    function editSession(id) {
+      const s = sessions.find(item => item.id === id);
+      if(!s) return;
+
+      document.getElementById('editSessionId').value = s.id;
+      document.getElementById('date').value = s.date;
+      document.getElementById('profit').value = s.profit;
+      document.getElementById('stake').value = s.stake;
+      document.getElementById('hands').value = s.hands;
+      document.getElementById('minutes').value = s.minutes;
+
+      document.getElementById('pokerFormTitle').innerText = "Editar Sesión";
+      document.getElementById('submitSessionBtn').innerText = "Actualizar Sesión";
+      document.getElementById('submitSessionBtn').className = "w-full bg-amber-600 hover:bg-amber-500 font-semibold text-white py-2.5 rounded-lg transition-colors";
+      document.getElementById('cancelPokerEditBtn').classList.remove('hidden');
+
+      document.getElementById('pokerFormCard').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function resetPokerForm() {
       document.getElementById('sessionForm').reset();
       document.getElementById('editSessionId').value = '';
       document.getElementById('date').valueAsDate = new Date();
-    });
+      document.getElementById('pokerFormTitle').innerText = "Cargar Sesión Póker";
+      document.getElementById('submitSessionBtn').innerText = "Guardar Sesión";
+      document.getElementById('submitSessionBtn').className = "w-full bg-emerald-600 hover:bg-emerald-500 font-semibold text-white py-2.5 rounded-lg transition-colors";
+      document.getElementById('cancelPokerEditBtn').classList.add('hidden');
+    }
 
-    // Guardar Gasto / Ingreso Externo
+    // Guardar / Actualizar Gasto
     document.getElementById('expenseForm').addEventListener('submit', (e) => {
       e.preventDefault();
       const id = document.getElementById('editExpenseId').value || Date.now().toString();
@@ -276,10 +310,37 @@
         category: document.getElementById('expCategory').value,
         notes: document.getElementById('expNotes').value
       });
+      resetExpenseForm();
+    });
+
+    // Editar Gasto
+    function editExpense(id) {
+      const e = expenses.find(item => item.id === id);
+      if(!e) return;
+
+      document.getElementById('editExpenseId').value = e.id;
+      document.getElementById('expDate').value = e.date;
+      document.getElementById('expAmount').value = e.amount;
+      document.getElementById('expCategory').value = e.category;
+      document.getElementById('expNotes').value = e.notes;
+
+      document.getElementById('expenseFormTitle').innerText = "Editar Registro";
+      document.getElementById('submitExpenseBtn').innerText = "Actualizar Registro";
+      document.getElementById('submitExpenseBtn').className = "w-full bg-amber-600 hover:bg-amber-500 font-semibold text-white py-2.5 rounded-lg transition-colors";
+      document.getElementById('cancelExpenseEditBtn').classList.remove('hidden');
+
+      document.getElementById('expenseFormCard').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function resetExpenseForm() {
       document.getElementById('expenseForm').reset();
       document.getElementById('editExpenseId').value = '';
       document.getElementById('expDate').valueAsDate = new Date();
-    });
+      document.getElementById('expenseFormTitle').innerText = "Registrar Gasto / Ingreso";
+      document.getElementById('submitExpenseBtn').innerText = "Guardar Registro";
+      document.getElementById('submitExpenseBtn').className = "w-full bg-rose-600 hover:bg-rose-500 font-semibold text-white py-2.5 rounded-lg transition-colors";
+      document.getElementById('cancelExpenseEditBtn').classList.add('hidden');
+    }
 
     function deleteItem(refName, id) {
       if(confirm('¿Seguro que deseas eliminar este registro?')) {
@@ -307,7 +368,7 @@
       let totalP = 0;
       let totalHands = 0;
       let totalMinutes = 0;
-      let weightedBBProfit = 0; // Para el cálculo exacto de bb/100 general
+      let weightedBBProfit = 0;
 
       fSessions.forEach(s => {
         totalP += s.profit;
@@ -366,8 +427,9 @@
             <td class="py-2 px-2">${s.date}</td>
             <td class="py-2 px-2 font-bold ${color}">${s.profit.toLocaleString()}</td>
             <td class="py-2 px-2 ${color}">${s.stake === 'Presencial' ? '-' : bb100}</td>
-            <td class="py-2 px-2 text-right">
-              <button onclick="deleteItem('poker_sessions', '${s.id}')" class="text-slate-500 hover:text-rose-400"><i class="fa-solid fa-trash"></i></button>
+            <td class="py-2 px-2 text-right space-x-1">
+              <button onclick="editSession('${s.id}')" class="text-slate-400 hover:text-amber-400"><i class="fa-solid fa-pen"></i></button>
+              <button onclick="deleteItem('poker_sessions', '${s.id}')" class="text-slate-400 hover:text-rose-400"><i class="fa-solid fa-trash"></i></button>
             </td>
           </tr>`;
       });
@@ -388,8 +450,9 @@
             <td class="py-2 px-2">${e.date}</td>
             <td class="py-2 px-2"><span class="text-[10px] ${bgBadge} px-1.5 py-0.5 rounded">${catLabels[e.category] || 'Gasto'}</span><br><span class="text-[10px] text-slate-500">${e.notes}</span></td>
             <td class="py-2 px-2 font-bold ${color}">${prefix}${e.amount.toLocaleString()}</td>
-            <td class="py-2 px-2 text-right">
-              <button onclick="deleteItem('poker_expenses', '${e.id}')" class="text-slate-500 hover:text-rose-400"><i class="fa-solid fa-trash"></i></button>
+            <td class="py-2 px-2 text-right space-x-1">
+              <button onclick="editExpense('${e.id}')" class="text-slate-400 hover:text-amber-400"><i class="fa-solid fa-pen"></i></button>
+              <button onclick="deleteItem('poker_expenses', '${e.id}')" class="text-slate-400 hover:text-rose-400"><i class="fa-solid fa-trash"></i></button>
             </td>
           </tr>`;
       });
