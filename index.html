@@ -27,33 +27,68 @@
 <body class="p-4 md:p-8 max-w-7xl mx-auto">
 
   <!-- HEADER -->
-  <header class="flex flex-col lg:flex-row justify-between items-center mb-8 border-b border-slate-800 pb-4 gap-4">
-    <div>
-      <h1 class="text-2xl font-bold text-emerald-400"><i class="fa-solid me-2 fa-spade"></i>Poker Tracker Py</h1>
-      <p class="text-xs text-slate-400">Control de Bankroll y Dinero Disponible (Gs.)</p>
+  <header class="mb-8 border-b border-slate-800 pb-6">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+      <div>
+        <h1 class="text-2xl font-bold text-emerald-400"><i class="fa-solid me-2 fa-spade"></i>Poker Tracker Py</h1>
+        <p class="text-xs text-slate-400">Control de Bankroll, Métricas de Póker y Dinero Disponible</p>
+      </div>
+
+      <!-- CAPITAL INICIAL / AJUSTE DE CAJA -->
+      <div class="flex items-center gap-2 bg-slate-900/80 px-3 py-2 rounded-xl border border-slate-700/60">
+        <i class="fa-solid fa-sliders text-amber-400 text-sm"></i>
+        <div class="flex flex-col">
+          <span class="text-[10px] text-slate-400 uppercase tracking-wider">Ajuste / Capital Inicial (Gs.)</span>
+          <input type="number" id="initialCapital" placeholder="0" onchange="saveInitialCapital()" class="bg-slate-800 border border-slate-700 rounded px-2 py-0.5 text-xs text-amber-400 font-bold w-32 mt-0.5 focus:border-amber-400 focus:outline-none">
+        </div>
+      </div>
     </div>
 
-    <div class="flex flex-wrap items-center gap-4 bg-slate-900/50 p-4 rounded-xl border border-slate-800">
-      <!-- CAPITAL INICIAL -->
-      <div class="flex flex-col">
-        <span class="text-[10px] text-slate-400 uppercase tracking-wider">Capital Inicial (Gs.)</span>
-        <input type="number" id="initialCapital" placeholder="0" onchange="saveInitialCapital()" class="bg-slate-800 border border-slate-700 rounded px-2 py-0.5 text-xs text-amber-400 font-semibold w-28 mt-1 focus:border-amber-400 focus:outline-none">
-      </div>
-
-      <div class="border-l border-slate-700 pl-4">
+    <!-- TARJETAS DE MÉTRICAS (MÉTRICAS PÓKER + FINANZAS) -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
+      
+      <!-- Ganancia Póker -->
+      <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800">
         <span class="text-[10px] text-slate-400 uppercase tracking-wider block">Ganancia Póker</span>
-        <span id="statTotalProfit" class="text-base font-bold text-emerald-400">0 Gs.</span>
+        <span id="statTotalProfit" class="text-sm md:text-base font-bold text-emerald-400">0 Gs.</span>
       </div>
 
-      <div class="border-l border-slate-700 pl-4">
+      <!-- Winrate Global -->
+      <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+        <span class="text-[10px] text-slate-400 uppercase tracking-wider block">Winrate Global</span>
+        <span id="statWinrate" class="text-sm md:text-base font-bold text-emerald-400">0 bb/100</span>
+      </div>
+
+      <!-- Manos Totales -->
+      <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+        <span class="text-[10px] text-slate-400 uppercase tracking-wider block">Manos Totales</span>
+        <span id="statTotalHands" class="text-sm md:text-base font-bold text-slate-200">0</span>
+      </div>
+
+      <!-- Horas Jugadas -->
+      <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+        <span class="text-[10px] text-slate-400 uppercase tracking-wider block">Tiempo Jugado</span>
+        <span id="statTotalHours" class="text-sm md:text-base font-bold text-slate-200">0 h</span>
+      </div>
+
+      <!-- Ganancia por Hora -->
+      <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+        <span class="text-[10px] text-slate-400 uppercase tracking-wider block">Ganancia / Hora</span>
+        <span id="statHourlyRate" class="text-sm md:text-base font-bold text-emerald-400">0 Gs./h</span>
+      </div>
+
+      <!-- Gastos Totales -->
+      <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800">
         <span class="text-[10px] text-slate-400 uppercase tracking-wider block">Gastos Totales</span>
-        <span id="statTotalExpenses" class="text-base font-bold text-rose-400">0 Gs.</span>
+        <span id="statTotalExpenses" class="text-sm md:text-base font-bold text-rose-400">0 Gs.</span>
       </div>
 
-      <div class="border-l border-slate-700 pl-4">
-        <span class="text-[10px] text-slate-400 uppercase tracking-wider block">Dinero Disponible</span>
-        <span id="statAvailable" class="text-lg font-black text-sky-400">0 Gs.</span>
+      <!-- Dinero Disponible Real -->
+      <div class="bg-slate-900/80 p-3 rounded-xl border border-sky-500/30 col-span-2 sm:col-span-1">
+        <span class="text-[10px] text-sky-400 uppercase tracking-wider font-semibold block">Disponible Real</span>
+        <span id="statAvailable" class="text-base md:text-lg font-black text-sky-400">0 Gs.</span>
       </div>
+
     </div>
   </header>
 
@@ -230,7 +265,7 @@
       document.getElementById('date').valueAsDate = new Date();
     });
 
-    // Guardar Gasto / Ingreso
+    // Guardar Gasto / Ingreso Externo
     document.getElementById('expenseForm').addEventListener('submit', (e) => {
       e.preventDefault();
       const id = document.getElementById('editExpenseId').value || Date.now().toString();
@@ -268,9 +303,28 @@
       renderSessions(fSessions);
       renderExpenses(fExpenses);
 
-      let totalP = 0; fSessions.forEach(s => totalP += s.profit);
-      
-      // Separar gastos de ingresos externos
+      // --- CÁLCULO DE MÉTRICAS PÓKER ---
+      let totalP = 0;
+      let totalHands = 0;
+      let totalMinutes = 0;
+      let weightedBBProfit = 0; // Para el cálculo exacto de bb/100 general
+
+      fSessions.forEach(s => {
+        totalP += s.profit;
+        totalHands += (s.hands || 0);
+        totalMinutes += (s.minutes || 0);
+
+        const bbValue = STAKES_BB[s.stake] || 500;
+        if (s.hands > 0) {
+          weightedBBProfit += (s.profit / bbValue);
+        }
+      });
+
+      const totalHours = (totalMinutes / 60).toFixed(1);
+      const hourlyRate = totalHours > 0 ? Math.round(totalP / (totalMinutes / 60)) : 0;
+      const overallWinrate = totalHands > 0 ? ((weightedBBProfit / totalHands) * 100).toFixed(2) : '0.00';
+
+      // --- CÁLCULO FINANCIERO ---
       let totalE = 0;
       let totalExtIncome = 0;
 
@@ -282,13 +336,19 @@
         }
       });
       
-      // Dinero disponible: Capital Inicial + Póker + Ingresos Ext - Gastos
       const available = initialCapital + totalP + totalExtIncome - totalE;
 
+      // ACTUALIZAR INTERFAZ
       document.getElementById('statTotalProfit').innerText = `${totalP.toLocaleString('es-PY')} Gs.`;
+      document.getElementById('statWinrate').innerText = `${overallWinrate} bb/100`;
+      document.getElementById('statWinrate').className = `text-sm md:text-base font-bold ${overallWinrate >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+      document.getElementById('statTotalHands').innerText = totalHands.toLocaleString();
+      document.getElementById('statTotalHours').innerText = `${totalHours} h`;
+      document.getElementById('statHourlyRate').innerText = `${hourlyRate.toLocaleString('es-PY')} Gs./h`;
+      
       document.getElementById('statTotalExpenses').innerText = `${totalE.toLocaleString('es-PY')} Gs.`;
       document.getElementById('statAvailable').innerText = `${available.toLocaleString('es-PY')} Gs.`;
-      document.getElementById('statAvailable').className = `text-lg font-black ${available >= 0 ? 'text-sky-400' : 'text-rose-500'}`;
+      document.getElementById('statAvailable').className = `text-base md:text-lg font-black ${available >= 0 ? 'text-sky-400' : 'text-rose-500'}`;
 
       drawProfitChart(fSessions);
       drawAvailableChart(fSessions, fExpenses);
@@ -299,7 +359,7 @@
       list.innerHTML = '';
       data.forEach(s => {
         const bb = STAKES_BB[s.stake] || 500;
-        const bb100 = (((s.profit / bb) / s.hands) * 100).toFixed(2);
+        const bb100 = s.hands > 0 ? (((s.profit / bb) / s.hands) * 100).toFixed(2) : 0;
         const color = s.profit >= 0 ? 'text-emerald-400' : 'text-rose-400';
         list.innerHTML += `
           <tr class="hover:bg-slate-700/30">
@@ -335,7 +395,7 @@
       });
     }
 
-    // Gráfico de Ganancias (Dinámico Verde/Rojo)
+    // Gráfico de Ganancias
     function drawProfitChart(fSessions) {
       const ctx = document.getElementById('profitChart').getContext('2d');
       if (profitChart) profitChart.destroy();
@@ -374,7 +434,7 @@
       });
     }
 
-    // Gráfico de Dinero Disponible (Tomando en cuenta ingresos externos)
+    // Gráfico de Dinero Disponible
     function drawAvailableChart(fSessions, fExpenses) {
       const ctx = document.getElementById('availableChart').getContext('2d');
       if (availableChart) availableChart.destroy();
