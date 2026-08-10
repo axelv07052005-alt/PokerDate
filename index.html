@@ -92,21 +92,9 @@
     </div>
   </header>
 
-  <!-- GRÁFICOS -->
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-    <div class="bg-slate-800 border border-slate-700 p-4 rounded-2xl shadow-xl">
-      <h2 class="text-sm font-semibold mb-2 text-slate-200"><i class="fa-solid fa-chart-line text-emerald-400"></i> Evolución de Ganancias Póker</h2>
-      <div class="relative w-full h-56"><canvas id="profitChart"></canvas></div>
-    </div>
-    <div class="bg-slate-800 border border-slate-700 p-4 rounded-2xl shadow-xl">
-      <h2 class="text-sm font-semibold mb-2 text-slate-200"><i class="fa-solid fa-chart-area text-sky-400"></i> Evolución de Dinero Disponible</h2>
-      <div class="relative w-full h-56"><canvas id="availableChart"></canvas></div>
-    </div>
-  </div>
-
   <!-- FILTROS GLOBALES -->
   <div class="bg-slate-800 border border-slate-700 p-4 rounded-2xl shadow-xl mb-6 flex flex-col sm:flex-row items-center gap-4 justify-between">
-    <div class="text-sm font-semibold text-slate-300"><i class="fa-solid fa-filter text-sky-400"></i> Rango de Fechas:</div>
+    <div class="text-sm font-semibold text-slate-300"><i class="fa-solid fa-filter text-sky-400 me-2"></i> Rango de Fechas:</div>
     <div class="flex items-center gap-3">
       <div class="flex items-center gap-2">
         <span class="text-xs text-slate-400">Desde:</span>
@@ -116,8 +104,37 @@
         <span class="text-xs text-slate-400">Hasta:</span>
         <input type="date" id="endDate" onchange="renderAll()" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs text-slate-200 focus:border-sky-500">
       </div>
-      <button onclick="clearFilters()" class="text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 px-3 py-1.5 rounded-lg transition-colors"><i class="fa-solid fa-xmark"></i> Limpiar</button>
+      <button onclick="clearFilters()" class="text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 px-3 py-1.5 rounded-lg transition-colors"><i class="fa-solid fa-xmark me-1"></i> Limpiar</button>
     </div>
+  </div>
+
+  <!-- GRÁFICOS (GRID DE 4 PANELES) -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+    
+    <!-- Gráfico 1: Evolución de Ganancias -->
+    <div class="bg-slate-800 border border-slate-700 p-4 rounded-2xl shadow-xl">
+      <h2 class="text-sm font-semibold mb-2 text-slate-200"><i class="fa-solid fa-chart-line text-emerald-400 me-2"></i> Evolución de Ganancias Póker</h2>
+      <div class="relative w-full h-56"><canvas id="profitChart"></canvas></div>
+    </div>
+
+    <!-- Gráfico 2: Evolución de Dinero Disponible -->
+    <div class="bg-slate-800 border border-slate-700 p-4 rounded-2xl shadow-xl">
+      <h2 class="text-sm font-semibold mb-2 text-slate-200"><i class="fa-solid fa-chart-area text-sky-400 me-2"></i> Evolución de Dinero Disponible</h2>
+      <div class="relative w-full h-56"><canvas id="availableChart"></canvas></div>
+    </div>
+
+    <!-- Gráfico 3: Volumen Diario de Manos Jugadas (NUEVO) -->
+    <div class="bg-slate-800 border border-slate-700 p-4 rounded-2xl shadow-xl">
+      <h2 class="text-sm font-semibold mb-2 text-slate-200"><i class="fa-solid fa-chart-simple text-amber-400 me-2"></i> Volumen Diario de Manos</h2>
+      <div class="relative w-full h-56"><canvas id="handsChart"></canvas></div>
+    </div>
+
+    <!-- Gráfico 4: Desglose de Gastos por Categoría (NUEVO) -->
+    <div class="bg-slate-800 border border-slate-700 p-4 rounded-2xl shadow-xl">
+      <h2 class="text-sm font-semibold mb-2 text-slate-200"><i class="fa-solid fa-chart-pie text-rose-400 me-2"></i> Gastos por Categoría</h2>
+      <div class="relative w-full h-56 flex items-center justify-center"><canvas id="categoryChart"></canvas></div>
+    </div>
+
   </div>
 
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -126,7 +143,7 @@
     <div class="space-y-6">
       <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl shadow-xl" id="pokerFormCard">
         <div class="flex justify-between items-center mb-4">
-          <h2 class="text-lg font-semibold text-emerald-400 flex items-center gap-2"><i class="fa-solid fa-cards"></i> <span id="pokerFormTitle">Cargar Sesión Póker</span></h2>
+          <h2 class="text-lg font-semibold text-emerald-400 flex items-center gap-2"><i class="fa-solid fa-spade"></i> <span id="pokerFormTitle">Cargar Sesión Póker</span></h2>
           <button id="cancelPokerEditBtn" onclick="resetPokerForm()" class="hidden text-xs text-rose-400 hover:underline"><i class="fa-solid fa-xmark"></i> Cancelar edición</button>
         </div>
         <form id="sessionForm" class="space-y-4">
@@ -221,8 +238,12 @@
     let sessions = [];
     let expenses = [];
     let initialCapital = 0;
+    
+    // Instancias de Gráficos
     let profitChart = null;
     let availableChart = null;
+    let handsChart = null;
+    let categoryChart = null;
 
     document.getElementById('date').valueAsDate = new Date();
     document.getElementById('expDate').valueAsDate = new Date();
@@ -239,7 +260,7 @@
       settingsRef.child('initialCapital').set(val);
     }
 
-    // Listeners
+    // Listeners Firebase
     sessionsRef.on('value', (snapshot) => {
       sessions = [];
       snapshot.forEach(child => { sessions.push(child.val()); });
@@ -254,7 +275,7 @@
       renderAll();
     });
 
-    // Guardar / Actualizar Sesión
+    // Guardar / Actualizar Sesión Póker
     document.getElementById('sessionForm').addEventListener('submit', (e) => {
       e.preventDefault();
       const id = document.getElementById('editSessionId').value || Date.now().toString();
@@ -299,7 +320,7 @@
       document.getElementById('cancelPokerEditBtn').classList.add('hidden');
     }
 
-    // Guardar / Actualizar Gasto
+    // Guardar / Actualizar Gasto o Ingreso
     document.getElementById('expenseForm').addEventListener('submit', (e) => {
       e.preventDefault();
       const id = document.getElementById('editExpenseId').value || Date.now().toString();
@@ -313,7 +334,7 @@
       resetExpenseForm();
     });
 
-    // Editar Gasto
+    // Editar Gasto / Movimiento
     function editExpense(id) {
       const e = expenses.find(item => item.id === id);
       if(!e) return;
@@ -364,7 +385,7 @@
       renderSessions(fSessions);
       renderExpenses(fExpenses);
 
-      // --- CÁLCULO DE MÉTRICAS PÓKER ---
+      // MÉTRICAS PÓKER
       let totalP = 0;
       let totalHands = 0;
       let totalMinutes = 0;
@@ -385,7 +406,7 @@
       const hourlyRate = totalHours > 0 ? Math.round(totalP / (totalMinutes / 60)) : 0;
       const overallWinrate = totalHands > 0 ? ((weightedBBProfit / totalHands) * 100).toFixed(2) : '0.00';
 
-      // --- CÁLCULO FINANCIERO ---
+      // MÉTRICAS FINANCIERAS
       let totalE = 0;
       let totalExtIncome = 0;
 
@@ -399,7 +420,7 @@
       
       const available = initialCapital + totalP + totalExtIncome - totalE;
 
-      // ACTUALIZAR INTERFAZ
+      // ACTUALIZAR TARJETAS EN DOM
       document.getElementById('statTotalProfit').innerText = `${totalP.toLocaleString('es-PY')} Gs.`;
       document.getElementById('statWinrate').innerText = `${overallWinrate} bb/100`;
       document.getElementById('statWinrate').className = `text-sm md:text-base font-bold ${overallWinrate >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
@@ -411,8 +432,11 @@
       document.getElementById('statAvailable').innerText = `${available.toLocaleString('es-PY')} Gs.`;
       document.getElementById('statAvailable').className = `text-base md:text-lg font-black ${available >= 0 ? 'text-sky-400' : 'text-rose-500'}`;
 
+      // RENDERIZAR LOS 4 GRÁFICOS
       drawProfitChart(fSessions);
       drawAvailableChart(fSessions, fExpenses);
+      drawHandsChart(fSessions);
+      drawCategoryChart(fExpenses);
     }
 
     function renderSessions(data) {
@@ -458,7 +482,7 @@
       });
     }
 
-    // Gráfico de Ganancias
+    // 1. Gráfico de Ganancias acumuladas de Póker
     function drawProfitChart(fSessions) {
       const ctx = document.getElementById('profitChart').getContext('2d');
       if (profitChart) profitChart.destroy();
@@ -497,7 +521,7 @@
       });
     }
 
-    // Gráfico de Dinero Disponible
+    // 2. Gráfico de Dinero Disponible Real
     function drawAvailableChart(fSessions, fExpenses) {
       const ctx = document.getElementById('availableChart').getContext('2d');
       if (availableChart) availableChart.destroy();
@@ -539,6 +563,92 @@
           scales: {
             x: { ticks: { color: '#64748b', font: {size: 9} }, grid: { color: '#334155' } },
             y: { ticks: { color: '#64748b', font: {size: 9} }, grid: { color: '#334155' } }
+          }
+        }
+      });
+    }
+
+    // 3. Gráfico de Volumen Diario de Manos (NUEVO)
+    function drawHandsChart(fSessions) {
+      const ctx = document.getElementById('handsChart').getContext('2d');
+      if (handsChart) handsChart.destroy();
+
+      const dailyHands = {};
+      fSessions.forEach(s => {
+        dailyHands[s.date] = (dailyHands[s.date] || 0) + (s.hands || 0);
+      });
+
+      const dates = Object.keys(dailyHands).sort((a, b) => new Date(a) - new Date(b));
+      const vals = dates.map(d => dailyHands[d]);
+
+      handsChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: dates,
+          datasets: [{
+            label: 'Manos Jugadas',
+            data: vals,
+            backgroundColor: 'rgba(245, 158, 11, 0.6)',
+            borderColor: '#f59e0b',
+            borderWidth: 1,
+            borderRadius: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { ticks: { color: '#64748b', font: { size: 9 } }, grid: { color: '#334155' } },
+            y: { ticks: { color: '#64748b', font: { size: 9 } }, grid: { color: '#334155' } }
+          }
+        }
+      });
+    }
+
+    // 4. Gráfico de Distribución de Gastos por Categoría (NUEVO)
+    function drawCategoryChart(fExpenses) {
+      const ctx = document.getElementById('categoryChart').getContext('2d');
+      if (categoryChart) categoryChart.destroy();
+
+      const categories = {
+        necesarias: { label: 'Necesarias', amount: 0, color: '#38bdf8' },
+        ocio: { label: 'Ocio', amount: 0, color: '#f43f5e' },
+        viajes: { label: 'Viajes', amount: 0, color: '#fbbf24' },
+        deudas: { label: 'Deudas', amount: 0, color: '#a855f7' },
+        otros: { label: 'Otros', amount: 0, color: '#94a3b8' }
+      };
+
+      fExpenses.forEach(e => {
+        if (e.category !== 'ingreso_ext' && categories[e.category]) {
+          categories[e.category].amount += e.amount;
+        }
+      });
+
+      const activeCats = Object.values(categories).filter(c => c.amount > 0);
+      const labels = activeCats.map(c => c.label);
+      const data = activeCats.map(c => c.amount);
+      const bgColors = activeCats.map(c => c.color);
+
+      categoryChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: labels.length > 0 ? labels : ['Sin datos'],
+          datasets: [{
+            data: data.length > 0 ? data : [1],
+            backgroundColor: bgColors.length > 0 ? bgColors : ['#334155'],
+            borderWidth: 1,
+            borderColor: '#1e293b'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: { color: '#94a3b8', font: { size: 10 }, boxWidth: 10 }
+            }
           }
         }
       });
